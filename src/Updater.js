@@ -120,13 +120,13 @@ class UpdateForm extends React.Component
 
     handleUpdatePlayer()
     {
-        Axios.post(process.env.REACT_APP_API_URL+"/api/v1/players/"+this.props.player.id+"/attributes", this.state.player)
+        /*Axios.post(process.env.REACT_APP_API_URL+"/api/v1/players/"+this.props.player.id+"/attributes", this.state.player)
         .then(response => {
             console.log(response);
         })
         .catch(error => {
             console.log(error);
-        })
+        })*/
     }
 
     render()
