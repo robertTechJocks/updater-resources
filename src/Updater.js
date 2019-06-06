@@ -43,7 +43,7 @@ class UpdateForm extends React.Component
     }
     componentDidMount()
     {
-        Axios.get("http://127.0.0.1:8000/api/v1/players/"+this.props.player.id)
+        Axios.get(process.env.REACT_APP_API_URL+"/api/v1/players/"+this.props.player.id)
         .then(response => {
             this.setState({player: response.data})
         })
@@ -120,7 +120,7 @@ class UpdateForm extends React.Component
 
     handleUpdatePlayer()
     {
-        Axios.post("http://127.0.0.1:8000/api/v1/players/"+this.props.player.id+"/attributes", this.state.player)
+        Axios.post(process.env.REACT_APP_API_URL+"/api/v1/players/"+this.props.player.id+"/attributes", this.state.player)
         .then(response => {
             console.log(response);
         })
@@ -378,10 +378,7 @@ class SkaterAttributesBlock extends React.Component
         }
         if(!this.props.player.restricted_tpe)
         {
-            if(value <= this.props.player.free_tpe)
-            {
-                return false;
-            }
+            return value <= this.props.player.free_tpe;
         }
         else
         {
@@ -544,7 +541,7 @@ class Updater extends React.Component {
     }
     componentDidMount()
     {
-        Axios.get("http://127.0.0.1:8000/api/v1/users/"+this.props.userID+"/players")
+        Axios.get(process.env.REACT_APP_API_URL+"/api/v1/users/"+this.props.userID+"/players")
         .then(response => {
             if(response.data.length === 1)
             {
