@@ -52,24 +52,61 @@ class UpdateForm extends React.Component
         })
     }
 
-    calculateTpeUpdateScale(value)
+    calculateTpeUpdateScale(value, attribute)
     {
+        //40 + ((50 % $tpe)*2) right?
+        let amt;
         //40 + ((50 % $tpe)*2) right?
         if(value < 60)
         {
-            return 1;
+            amt = 1;
         }
         else if(value < 70)
         {
-            return 2;
+            amt = 2;
         }
         else if(value < 80)
         {
-            return 4;
+            amt = 4;
         }
         else if(value < 90)
         {
-            return 8;
+            amt = 8;
+        }
+        else
+        {
+            amt = 12;
+        }
+        if(attribute === this.state.player.weakness)
+        {
+            if(this.state.player.player_type === "skater")
+            {
+                return this.calcWeaknessTPE(value);
+            }
+            else
+            {
+                return amt*2;
+            }
+        }
+        else
+        {
+            return amt;
+        }
+    }
+
+    calcWeaknessTPE(value)
+    {
+        if(value < 40)
+        {
+            return 1;
+        }
+        else if(value < 60)
+        {
+            return 2;
+        }
+        else if(value < 70)
+        {
+            return 6;
         }
         else
         {
@@ -80,7 +117,7 @@ class UpdateForm extends React.Component
     updateAttribute(attr)
     {
         let player = this.state.player;
-        let tpeAmtToUpdate = this.calculateTpeUpdateScale(player.sim_stats[attr]);
+        let tpeAmtToUpdate = this.calculateTpeUpdateScale(player.sim_stats[attr], attr);
         console.log(tpeAmtToUpdate);
         if(!player.restricted_tpe)
         {
@@ -133,10 +170,6 @@ class UpdateForm extends React.Component
     {
         console.log(this.props);
         let block = <SkaterAttributesBlock player={this.state.player} updateAttribute={this.updateAttribute}></SkaterAttributesBlock>;
-        if(this.state.player.player_type === "goalie")
-        {
-            let block = <GoalieAttributesBlock player={this.state.player} updateAttribute={this.updateAttribute}></GoalieAttributesBlock>;
-        }
         return(
             <Container fluid="true">
                 <Row>
@@ -145,21 +178,16 @@ class UpdateForm extends React.Component
                     </Col>
                 </Row>
                 <Row>
-                    <Col xs={8}>
-                        {block}
+                    <Col xs={6}>
+                        <PlayerBlock player={this.state.player}></PlayerBlock>
                     </Col>
-                    <Col xs={4}>
-                        <Row style={{marginBottom: "40px"}}>
-                            <Col xs={12}>
-                                <PlayerBlock player={this.state.player}></PlayerBlock>
-                            </Col>
-                        </Row>
-                        <Row>
-                            <Col xs={12}>
-                                <TpeBlock player={this.state.player}></TpeBlock>
-                                <Button block style={{marginTop: "40px"}} onClick={this.handleUpdatePlayer}>Save Updates</Button>
-                            </Col>
-                        </Row>
+                    <Col xs={6}>
+                        <TpeBlock player={this.state.player}></TpeBlock>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col xs={12}>
+                        {block}
                     </Col>
                 </Row>
             </Container>
@@ -178,30 +206,36 @@ class GoalieAttributesBlock extends React.Component
 
     calculateTpeUpdateScale(value, attribute)
     {
-        if(attribute === this.props.player.weakness)
-        {
-            return this.calcWeaknessTPE(value);
-        }
+        let amt;
         //40 + ((50 % $tpe)*2) right?
         if(value < 60)
         {
-            return 1;
+            amt = 1;
         }
         else if(value < 70)
         {
-            return 2;
+            amt = 2;
         }
         else if(value < 80)
         {
-            return 4;
+            amt = 4;
         }
         else if(value < 90)
         {
-            return 8;
+            amt = 8;
         }
         else
         {
-            return 12;
+            amt = 12;
+        }
+
+        if(attribute === this.props.player.weakness)
+        {
+            return amt*2;
+        }
+        else
+        {
+            return amt;
         }
     }
 
@@ -319,34 +353,47 @@ class SkaterAttributesBlock extends React.Component
         this.state = {
         }
         this.checkTpeAmount = this.checkTpeAmount.bind(this);
+        this.updateMulti = this.updateMulti.bind(this);
     }
 
     calculateTpeUpdateScale(value, attribute)
     {
-        if(attribute === this.props.player.weakness)
-        {
-            return this.calcWeaknessTPE(value);
-        }
         //40 + ((50 % $tpe)*2) right?
+        let amt;
         if(value < 60)
         {
-            return 1;
+            amt = 1;
         }
         else if(value < 70)
         {
-            return 2;
+            amt = 2;
         }
         else if(value < 80)
         {
-            return 4;
+            amt = 4;
         }
         else if(value < 90)
         {
-            return 8;
+            amt = 8;
         }
         else
         {
-            return 12;
+            amt = 12;
+        }
+        if(attribute === this.props.player.weakness)
+        {
+            if(this.props.player.player_type === "skater")
+            {
+                return this.calcWeaknessTPE(value);
+            }
+            else
+            {
+                return amt*2;
+            }
+        }
+        else
+        {
+            return amt;
         }
     }
 
@@ -385,8 +432,6 @@ class SkaterAttributesBlock extends React.Component
             let attributesInRestrictedTPE = Object.keys(this.props.player.restricted_tpe);
             if(attributesInRestrictedTPE.includes(attribute))
             {
-                console.log("we should see this");
-                console.log((this.props.player.restricted_tpe[attribute] + this.props.player.free_tpe))
                 return value <= (this.props.player.restricted_tpe[attribute] + this.props.player.free_tpe);
             }
             else
@@ -414,6 +459,24 @@ class SkaterAttributesBlock extends React.Component
         }
     }
 
+    checkCappedAttributeMulti(attribute, steps)
+    {
+        let strengths = [this.props.player.strength_1, this.props.player.strength_2, this.props.player.strength_3];
+        let weakness = this.props.player.weakness;
+        if(attribute === weakness)
+        {
+            return this.props.player.sim_stats[attribute] < 85-steps+1;
+        }
+        else if(strengths.includes(attribute))
+        {
+            return this.props.player.sim_stats[attribute] < 99-steps+1;
+        }
+        else
+        {
+            return this.props.player.sim_stats[attribute] < 90-steps+1;
+        }
+    }
+
     generateAttributeLabel(attribute)
     {
         let strengths = [this.props.player.strength_1, this.props.player.strength_2, this.props.player.strength_3];
@@ -432,6 +495,22 @@ class SkaterAttributesBlock extends React.Component
         }
     }
 
+    plusMulti(value, attribute, steps)
+    {
+        let total = 0;
+        for (let index = 0; index < steps; index++) {
+            total += this.calculateTpeUpdateScale(value+index, attribute);
+        }
+        return total;
+    }
+
+    updateMulti(attribute, steps)
+    {
+        for (let index = 0; index < steps; index++) {
+            this.props.updateAttribute(attribute)
+        }
+    }
+
     render()
     {
         let attributes;
@@ -443,6 +522,8 @@ class SkaterAttributesBlock extends React.Component
                 let notCapped = this.checkCappedAttribute(attribute);
                 let attributeLabel = this.generateAttributeLabel(attribute);
                 let buttonText;
+                let plusFive = null;
+                let plusTen = null;
                 if(notCapped)
                 {
                     buttonText = "+1 for "+amtToUpdate+" TPE";
@@ -451,12 +532,39 @@ class SkaterAttributesBlock extends React.Component
                 {
                     buttonText = "Attribute Capped";
                 }
-                return (<Row key={i} style={{paddingBottom: "10px", paddingTop: "10px", borderBottom: "1px solid"}}>
-                    <Col className="align-self-center" xs={6} md={2}>{attribute}: {this.props.player.sim_stats[attribute]}</Col>
-                    <Col className="align-self-center" xs={6} md={4}><Button disabled={!checkAmount} onClick={() => this.props.updateAttribute(attribute)}>{buttonText}</Button></Col>
-                    <Col className="align-self-center" xs={6} md={6}><div style={{width:"120px", float:"right"}}>{attributeLabel}</div></Col>
+                if(this.props.player.free_tpe > 100)
+                {
+                    plusFive = {};
+                    plusFive.amt = this.plusMulti(this.props.player.sim_stats[attribute], attribute, 5);
+                    if(this.checkCappedAttributeMulti(attribute, 5))
+                    {
+                        plusFive.text = "+5 for "+plusFive.amt+" TPE";
+                    }
+                    else
+                    {
+                        plusFive = null;
+                    }
 
-                </Row>) 
+                    plusTen = {};
+                    plusTen.amt = this.plusMulti(this.props.player.sim_stats[attribute], attribute, 10);
+                    if(this.checkCappedAttributeMulti(attribute, 10))
+                    {
+                        plusTen.text = "+10 for "+plusTen.amt+" TPE";
+                    }
+                    else
+                    {
+                        plusTen = null;
+                    }
+                }
+                return (<Col xs={12} md={6} key={i}>
+                    <Row style={{paddingBottom: "10px", paddingTop: "10px", borderBottom: "1px solid", marginLeft: "5px"}}>
+                        <Col className="align-self-center" xs={6} md={2}>{attribute}: {this.props.player.sim_stats[attribute]}</Col>
+                        <Col className="align-self-center" xs={6} md={2}><Button disabled={!checkAmount} onClick={() => this.props.updateAttribute(attribute)}>{buttonText}</Button></Col>
+                        {plusFive && <Col className="align-self-center" xs={6} md={2}><Button disabled={!checkAmount} onClick={() => this.updateMulti(attribute, 5)}>{plusFive.text}</Button></Col>}
+                        {plusTen && <Col className="align-self-center" xs={6} md={2}><Button disabled={!checkAmount} onClick={() => this.updateMulti(attribute, 10)}>{plusTen.text}</Button></Col>}
+                        <Col className="align-self-center" xs={6} md={4}><div style={{width:"120px", float:"right"}}>{attributeLabel}</div></Col>
+                    </Row>
+                </Col>) 
             })
         }
         else
@@ -466,9 +574,9 @@ class SkaterAttributesBlock extends React.Component
        return(<Card>
         <Card.Header>Attributes</Card.Header>
         <Card.Body>
-          <Card.Text>
-            {attributes}
-          </Card.Text>
+            <Row>
+                {attributes}
+            </Row>
         </Card.Body>
       </Card>)
     }
